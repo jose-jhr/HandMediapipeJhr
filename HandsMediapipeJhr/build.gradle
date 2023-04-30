@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
+    id 'maven-publish'
 }
 
 android {
@@ -42,4 +43,20 @@ dependencies {
 
     // MediaPipe Library
     implementation 'com.google.mediapipe:tasks-vision:0.1.0-alpha-8'
+
+
+}
+
+
+afterEvaluate{
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'com.github.ingenieriajhr'
+                artifactId = 'android-HandsMediapipeJhr'
+                version = '1.0.5'
+            }
+        }
+    }
 }
