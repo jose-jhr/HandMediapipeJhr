@@ -301,9 +301,6 @@ class MainActivity : AppCompatActivity(),HandLandmarkerHelper.LandmarkerListener
 
 
 ```
-![Screenshot_20230430-023835_PointsHandIntegration](https://user-images.githubusercontent.com/66834393/235341639-11a0ad48-bdc2-4736-924c-9d39496be607.jpg)
 
-
-
-
+![Screenshot_20230430-024128_PointsHandIntegration](https://user-images.githubusercontent.com/66834393/235341765-f5e1f263-7c0d-447e-a876-ca7fc7dbb946.jpg)
 
