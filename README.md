@@ -1,5 +1,10 @@
 # HandMediapipeJhr
 
+
+descargar el archivo task
+https://srv718.hstgr.io:7443/2740f9a3b5d5b9ad/files/public_html/mediapipejhr/hand_landmarker.task
+
+
 //habilitar la vinculación de vistas en Android
 ```kotlin
 
