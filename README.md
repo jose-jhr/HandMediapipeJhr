@@ -1,5 +1,6 @@
 # HandMediapipeJhr
 
+//habilitar la vinculación de vistas en Android
 ```kotlin
 
  buildFeatures{
