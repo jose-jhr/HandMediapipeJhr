@@ -17,3 +17,293 @@
     implementation 'com.google.mediapipe:tasks-vision:0.1.0-alpha-8'
 
 ```
+
+
+```kotlin
+
+
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.util.AttributeSet
+import android.view.View
+import androidx.core.content.ContextCompat
+import com.google.mediapipe.tasks.vision.core.RunningMode
+import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmark
+import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarkerResult
+import kotlin.math.max
+import kotlin.math.min
+
+class OverlayView(context: Context?, attrs: AttributeSet?) :
+    View(context, attrs) {
+
+    private var results: HandLandmarkerResult? = null
+    private var linePaint = Paint()
+    private var pointPaint = Paint()
+
+    private var scaleFactor: Float = 1f
+    private var imageWidth: Int = 1
+    private var imageHeight: Int = 1
+
+    init {
+        initPaints()
+    }
+    fun clear() {
+        results = null
+        linePaint.reset()
+        pointPaint.reset()
+        invalidate()
+        initPaints()
+    }
+
+    private fun initPaints() {
+        linePaint.color =
+            ContextCompat.getColor(context!!, R.color.blue)
+        linePaint.strokeWidth = LANDMARK_STROKE_WIDTH
+        linePaint.style = Paint.Style.STROKE
+
+        pointPaint.color = Color.RED
+        pointPaint.strokeWidth = LANDMARK_STROKE_WIDTH
+        pointPaint.style = Paint.Style.FILL
+    }
+
+    override fun draw(canvas: Canvas) {
+        super.draw(canvas)
+        results?.let { handLandmarkerResult ->
+            val lines = mutableListOf<Float>()
+            val points = mutableListOf<Float>()
+
+            for (landmarks in handLandmarkerResult.landmarks()) {
+                for (i in landmarkConnections.indices step 2) {
+                    val startX =
+                        landmarks[landmarkConnections[i]].x() * imageWidth * scaleFactor
+                    val startY =
+                        landmarks[landmarkConnections[i]].y() * imageHeight * scaleFactor
+                    val endX =
+                        landmarks[landmarkConnections[i + 1]].x() * imageWidth * scaleFactor
+                    val endY =
+                        landmarks[landmarkConnections[i + 1]].y() * imageHeight * scaleFactor
+                    lines.add(startX)
+                    lines.add(startY)
+                    lines.add(endX)
+                    lines.add(endY)
+                    points.add(startX)
+                    points.add(startY)
+                }
+                canvas.drawLines(lines.toFloatArray(), linePaint)
+                canvas.drawPoints(points.toFloatArray(), pointPaint)
+            }
+        }
+    }
+
+    fun setResults(
+        handLandmarkerResults: HandLandmarkerResult,
+        imageHeight: Int,
+        imageWidth: Int,
+        runningMode: RunningMode = RunningMode.IMAGE
+    ) {
+        results = handLandmarkerResults
+
+        this.imageHeight = imageHeight
+        this.imageWidth = imageWidth
+
+        scaleFactor =  max(width * 1f / imageWidth, height * 1f / imageHeight)
+
+        invalidate()
+    }
+
+    companion object {
+        private const val LANDMARK_STROKE_WIDTH = 12F
+        
+        private val landmarkConnections = listOf(
+            HandLandmark.WRIST,
+            HandLandmark.THUMB_CMC,
+            HandLandmark.THUMB_CMC,
+            HandLandmark.THUMB_MCP,
+            HandLandmark.THUMB_MCP,
+            HandLandmark.THUMB_IP,
+            HandLandmark.THUMB_IP,
+            HandLandmark.THUMB_TIP,
+            HandLandmark.WRIST,
+            HandLandmark.INDEX_FINGER_MCP,
+            HandLandmark.INDEX_FINGER_MCP,
+            HandLandmark.INDEX_FINGER_PIP,
+            HandLandmark.INDEX_FINGER_PIP,
+            HandLandmark.INDEX_FINGER_DIP,
+            HandLandmark.INDEX_FINGER_DIP,
+            HandLandmark.INDEX_FINGER_TIP,
+            HandLandmark.INDEX_FINGER_MCP,
+            HandLandmark.MIDDLE_FINGER_MCP,
+            HandLandmark.MIDDLE_FINGER_MCP,
+            HandLandmark.MIDDLE_FINGER_PIP,
+            HandLandmark.MIDDLE_FINGER_PIP,
+            HandLandmark.MIDDLE_FINGER_DIP,
+            HandLandmark.MIDDLE_FINGER_DIP,
+            HandLandmark.MIDDLE_FINGER_TIP,
+            HandLandmark.MIDDLE_FINGER_MCP,
+            HandLandmark.RING_FINGER_MCP,
+            HandLandmark.RING_FINGER_MCP,
+            HandLandmark.RING_FINGER_PIP,
+            HandLandmark.RING_FINGER_PIP,
+            HandLandmark.RING_FINGER_DIP,
+            HandLandmark.RING_FINGER_DIP,
+            HandLandmark.RING_FINGER_TIP,
+            HandLandmark.RING_FINGER_MCP,
+            HandLandmark.PINKY_MCP,
+            HandLandmark.WRIST,
+            HandLandmark.PINKY_MCP,
+            HandLandmark.PINKY_MCP,
+            HandLandmark.PINKY_PIP,
+            HandLandmark.PINKY_PIP,
+            HandLandmark.PINKY_DIP,
+            HandLandmark.PINKY_DIP,
+            HandLandmark.PINKY_TIP
+        )
+    }
+}
+
+
+
+```
+
+
+```kotlin
+
+
+class MainActivity : AppCompatActivity(),HandLandmarkerHelper.LandmarkerListener{
+
+
+    lateinit var binding : ActivityMainBinding
+    lateinit var cameraJhr: CameraJhr
+
+    lateinit var handLandmarkerHelper:HandLandmarkerHelper
+    lateinit var mainViewModel:MainViewModel
+
+    var widthDisplay = 0
+    var heightDisplay = 0
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        window.statusBarColor = ContextCompat.getColor(this,R.color.purple_500)
+
+        getDisplayMetrics()
+
+        //init cameraJHR
+        cameraJhr = CameraJhr(this)
+
+
+        //init configuration handlandmarker
+        configHandLandMarker()
+        //initObject handLandMarkerHelper
+        handLandmarkerHelperinit()
+    }
+
+    private fun getDisplayMetrics() {
+
+        val displayMetrics = DisplayMetrics()
+        windowManager.getDefaultDisplay().getMetrics(displayMetrics)
+        widthDisplay = displayMetrics.widthPixels
+        heightDisplay = displayMetrics.heightPixels
+
+
+    }
+
+    private fun configHandLandMarker() {
+        mainViewModel = MainViewModel()
+        mainViewModel.setDelegate(HandLandmarkerHelper.DELEGATE_GPU)
+        mainViewModel.setMinHandDetectionConfidence(0.5f)
+        mainViewModel.setMinHandPresenceConfidence(0.5f)
+        mainViewModel.setMinHandTrackingConfidence(0.5f)
+        mainViewModel.setMaxHands(1)
+    }
+
+    /**
+     * init constructor handlandMarker
+     */
+    private fun handLandmarkerHelperinit() {
+        handLandmarkerHelper = HandLandmarkerHelper(
+            context = this,
+            minHandDetectionConfidence = mainViewModel.currentMinHandDetectionConfidence,
+            minHandTrackingConfidence = mainViewModel.currentMinHandTrackingConfidence,
+            maxNumHands = mainViewModel.currentMaxHands,
+            mP_HAND_LANDMARKER_TASK = "hand_landmarker.task",
+            minHandPresenceConfidence = mainViewModel.currentMinHandPresenceConfidence,
+            handLandmarkerHelperListener = this,
+            currentDelegate = HandLandmarkerHelper.DELEGATE_GPU
+        )
+    }
+
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (cameraJhr.allpermissionsGranted() && !cameraJhr.ifStartCamera){
+            startCameraJhr()
+        }else{
+            cameraJhr.noPermissions()
+        }
+    }
+
+    /**
+     * start Camera Jhr
+     */
+    private fun startCameraJhr() {
+        cameraJhr.addlistenerBitmap(object : BitmapResponse {
+            override fun bitmapReturn(bitmap: Bitmap?) {
+                //val sendBitmap = bitmap!!.rotate(180f)
+                //val newBitma = Bitmap.createScaledBitmap(sendBitmap,widthDisplay,heightDisplay,false)
+                if (bitmap!=null){
+                    runOnUiThread {
+                       //binding.imgBitmap.setImageBitmap(bitmap)
+                    }
+
+                    handLandmarkerHelper.detectLiveStream(bitmap,true)
+                }
+            }
+        })
+        cameraJhr.initBitmap()
+        //selector camera LENS_FACING_FRONT = 0;    LENS_FACING_BACK = 1;
+        //aspect Ratio  RATIO_4_3 = 0; RATIO_16_9 = 1;
+        cameraJhr.start(0,0,binding.cameraPreview,true,false,true)
+    }
+
+
+    /**
+     * @return bitmap rotate degrees
+     */
+    fun Bitmap.rotate(degrees:Float) = Bitmap.createBitmap(this,0,0,width,height,
+        Matrix().apply { postRotate(degrees)
+                       postScale(-1f,1f)},true)
+
+
+    override fun onError(error: String, errorCode: Int) {
+
+    }
+
+    override fun onResults(resultBundle: HandLandmarkerHelper.ResultBundle) {
+
+        binding.overlay.setResults(
+            resultBundle.results.first(),
+            imageHeight = resultBundle.inputImageHeight,
+            imageWidth = resultBundle.inputImageWidth,
+            RunningMode.LIVE_STREAM
+        )
+
+        // Force a redraw
+        binding.overlay.invalidate()
+    }
+
+
+}
+
+
+```
+![Screenshot_20230430-023835_PointsHandIntegration](https://user-images.githubusercontent.com/66834393/235341639-11a0ad48-bdc2-4736-924c-9d39496be607.jpg)
+
+
+
+
+
