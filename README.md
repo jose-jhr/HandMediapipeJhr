@@ -18,6 +18,8 @@
 
 ```
 
+Class draw result points
+
 
 ```kotlin
 
@@ -166,6 +168,9 @@ class OverlayView(context: Context?, attrs: AttributeSet?) :
 
 
 ```
+
+
+Class MainActivity Principal
 
 
 ```kotlin
