@@ -185,48 +185,67 @@ Class MainActivity Principal
 
 
 ```kotlin
+class MainActivity : AppCompatActivity(),HandLandmarkerHelper.LandmarkerListener {
+    lateinit var binding: ActivityMainBinding
 
-
-class MainActivity : AppCompatActivity(),HandLandmarkerHelper.LandmarkerListener{
-
-
-    lateinit var binding : ActivityMainBinding
     lateinit var cameraJhr: CameraJhr
 
-    lateinit var handLandmarkerHelper:HandLandmarkerHelper
     lateinit var mainViewModel:MainViewModel
 
-    var widthDisplay = 0
-    var heightDisplay = 0
-
-
+    lateinit var handLandmarkerHelper:HandLandmarkerHelper
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        window.statusBarColor = ContextCompat.getColor(this,R.color.purple_500)
 
-        getDisplayMetrics()
-
-        //init cameraJHR
         cameraJhr = CameraJhr(this)
 
-
-        //init configuration handlandmarker
         configHandLandMarker()
-        //initObject handLandMarkerHelper
         handLandmarkerHelperinit()
-    }
-
-    private fun getDisplayMetrics() {
-
-        val displayMetrics = DisplayMetrics()
-        windowManager.getDefaultDisplay().getMetrics(displayMetrics)
-        widthDisplay = displayMetrics.widthPixels
-        heightDisplay = displayMetrics.heightPixels
-
 
     }
+
+
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (cameraJhr.allpermissionsGranted()&&!cameraJhr.ifStartCamera){
+            starCameraJhr()
+        }else{
+            cameraJhr.noPermissions()
+        }
+    }
+
+    private fun starCameraJhr() {
+        cameraJhr.addlistenerBitmap(object :BitmapResponse{
+            override fun bitmapReturn(bitmap: Bitmap?) {
+               handLandmarkerHelper.detectLiveStream(bitmap!!,true)
+            }
+        })
+
+        cameraJhr.addlistenerImageProxy(object :ImageProxyResponse{
+            override fun imageProxyReturn(imageProxy: ImageProxy) {
+                try {
+
+                
+                }catch (e: IllegalStateException) {
+                    // Handle the exception here
+                    println("error en conversion imageproxy")
+                }
+            }
+        })
+        cameraJhr.initBitmap()
+        cameraJhr.initImageProxy()
+
+        cameraJhr.start(0,0,binding.cameraPreview,true,false,true)
+
+    }
+
+    fun Bitmap.rotate(degrees:Float)= Bitmap.createBitmap(this,0,0,width,height, Matrix().apply {
+        postRotate(degrees)
+    },true)
+
+
 
     private fun configHandLandMarker() {
         mainViewModel = MainViewModel()
@@ -236,6 +255,7 @@ class MainActivity : AppCompatActivity(),HandLandmarkerHelper.LandmarkerListener
         mainViewModel.setMinHandTrackingConfidence(0.5f)
         mainViewModel.setMaxHands(1)
     }
+
 
     /**
      * init constructor handlandMarker
@@ -253,62 +273,19 @@ class MainActivity : AppCompatActivity(),HandLandmarkerHelper.LandmarkerListener
         )
     }
 
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (cameraJhr.allpermissionsGranted() && !cameraJhr.ifStartCamera){
-            startCameraJhr()
-        }else{
-            cameraJhr.noPermissions()
-        }
-    }
-
-    /**
-     * start Camera Jhr
-     */
-    private fun startCameraJhr() {
-        cameraJhr.addlistenerBitmap(object : BitmapResponse {
-            override fun bitmapReturn(bitmap: Bitmap?) {
-                //val sendBitmap = bitmap!!.rotate(180f)
-                //val newBitma = Bitmap.createScaledBitmap(sendBitmap,widthDisplay,heightDisplay,false)
-                if (bitmap!=null){
-                    runOnUiThread {
-                       //binding.imgBitmap.setImageBitmap(bitmap)
-                    }
-
-                    handLandmarkerHelper.detectLiveStream(bitmap,true)
-                }
-            }
-        })
-        cameraJhr.initBitmap()
-        //selector camera LENS_FACING_FRONT = 0;    LENS_FACING_BACK = 1;
-        //aspect Ratio  RATIO_4_3 = 0; RATIO_16_9 = 1;
-        cameraJhr.start(0,0,binding.cameraPreview,true,false,true)
-    }
-
-
-    /**
-     * @return bitmap rotate degrees
-     */
-    fun Bitmap.rotate(degrees:Float) = Bitmap.createBitmap(this,0,0,width,height,
-        Matrix().apply { postRotate(degrees)
-                       postScale(-1f,1f)},true)
-
-
     override fun onError(error: String, errorCode: Int) {
 
     }
 
     override fun onResults(resultBundle: HandLandmarkerHelper.ResultBundle) {
 
-        binding.overlay.setResults(
-            resultBundle.results.first(),
-            imageHeight = resultBundle.inputImageHeight,
-            imageWidth = resultBundle.inputImageWidth,
-            RunningMode.LIVE_STREAM
-        )
+            binding.overlay.setResults(
+                resultBundle.results.first(),
+                imageHeight = resultBundle.inputImageHeight,
+                imageWidth = resultBundle.inputImageWidth,
+                runningMode = RunningMode.LIVE_STREAM
+            )
 
-        // Force a redraw
         binding.overlay.invalidate()
     }
 
