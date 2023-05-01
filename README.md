@@ -1,8 +1,11 @@
 # HandMediapipeJhr
 
 
-descargar el archivo task
-https://cienciayculturacreativa.com/mediapipejhr/hand_landmarker.task
+descargar el archivo task en el siguiente enlace(1) o el archivo zip (2) 
+1) https://cienciayculturacreativa.com/mediapipejhr/hand_landmarker.task
+
+2) [hand_landmarker.zip](https://github.com/jose-jhr/HandMediapipeJhr/files/11366419/hand_landmarker.zip)
+
 
 
 //habilitar la vinculación de vistas en Android
