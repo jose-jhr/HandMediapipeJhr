@@ -24,6 +24,8 @@ descargar el archivo task en el siguiente enlace(1) o el archivo zip (2)
     implementation "androidx.camera:camera-view:1.3.0-alpha06"
     // MediaPipe Library
     implementation 'com.google.mediapipe:tasks-vision:0.1.0-alpha-8'
+    //implementation mediaPipeJhrLibrary
+    implementation 'com.github.jose-jhr:HandMediapipeJhr:1.0.0'
 
 ```
 
